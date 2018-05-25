@@ -77,5 +77,12 @@ describe('GRExtended', () => {
 		it('Should find a record', () => expect(gr.gQuery().gFind(x => x.getValue('sys_id') === 'id2').sys_id).toBe('id2'));
 		it('Should fail to find a record', () => expect(gr.gQuery().gFind(x => false)).toBe(undefined));
 	});
-	
+
+	describe('gJson', () => {
+		it('Should be a function', () => expect(gr.gQuery().gNext().gJson).toBeInstanceOf(Function));
+		fit('Should turn a record into JSON', () => {
+			expect(typeof gr.gGet(gr_data[0].sys_id).gJson()).toBe('string');
+			expect(typeof JSON.parse(gr.gGet(gr_data[0].sys_id).gJson())).toBe('object');
+		});
+	});
 });

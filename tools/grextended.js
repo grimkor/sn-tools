@@ -53,7 +53,7 @@ module.exports = GRExtended = function(input) {
 	gSome = function(func) {
 		var bool = false;
 
-		while (this.next() && !bool) {
+		while (!bool && this.next()) {
 			bool = func(this);
 		}
 		return bool;
