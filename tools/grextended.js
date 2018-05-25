@@ -45,7 +45,7 @@ module.exports = GRExtended = function (input) {
 
     gFilter = function (func) {
         if (!func) {
-            return this;
+            return;
         }
         var filteredRecords = [];
 
@@ -62,7 +62,7 @@ module.exports = GRExtended = function (input) {
 
     gForEach = function (func) {
         if (!func) {
-            return this;
+            return;
         }
 
         while (this.next()) {
