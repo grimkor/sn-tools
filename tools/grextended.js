@@ -1,157 +1,128 @@
-const gr_data = [
-	{
-		sys_id: 'id1',
-		sys_class_name: 'incident',
-		number: 'NUM00001',
-		description: 'Description 1'
-	},
-	{
-		sys_id: 'id2',
-		sys_class_name: 'incident',
-		number: 'NUM00002',
-		description: 'Description 2'
-	},
-	{
-		sys_id: 'id3',
-		sys_class_name: 'incident',
-		number: 'NUM00003',
-		description: 'Description 3'
-	},
-	{
-		sys_id: 'id4',
-		sys_class_name: 'incident',
-		number: 'NUM00004',
-		description: 'Description 4'
-	}
-];
-
+const gr_data = require('../grextended_data');
 const GlideRecord = require('../classes/gliderecord')(gr_data);
 
-module.exports = GRExtended = function (input) {
+module.exports = GRExtended = function(input) {
+	_METHODS = ['gMap', 'gFilter', 'gForEach', 'gReduce', 'gSome', 'gFind', 'gJson', 'gToObject', '_METHODS', 'gQuery', 'gNext', 'gGet'];
 
-    _METHODS = ['gMap', 'gFilter', 'gForEach', 'gReduce', 'gSome', 'gFind', 'gJson', 'gToObject', '_METHODS', 'gQuery', 'gNext', 'gGet'];
+	gMap = function(func) {
+		if (!func) {
+			return [];
+		}
 
-    gMap = function (func) {
-        if (!func) {
-            return [];
-        }
+		var gMap = [];
+		while (this.next()) {
+			gMap.push(func(this));
+		}
+		return gMap;
+	};
 
-        var gMap = [];
-        while (this.next()) {
-            gMap.push(func(this));
-        }
-        return gMap;
-    };
+	gFilter = function(func) {
+		if (!func) {
+			return;
+		}
+		var filteredRecords = [];
 
-    gFilter = function (func) {
-        if (!func) {
-            return;
-        }
-        var filteredRecords = [];
+		while (this.next()) {
+			if (func(this)) {
+				filteredRecords.push(this.getValue('sys_id'));
+			}
+		}
+		var filteredGr = GRExtended(this.getTableName());
+		filteredGr.addQuery('sys_id', 'IN', filteredRecords);
+		filteredGr.query();
+		return filteredGr;
+	};
 
-        while (this.next()) {
-            if (func(this)) {
-                filteredRecords.push(this.getValue('sys_id'));
-            }
-        }
-        var filteredGr = GRExtended(this.getTableName());
-        filteredGr.addQuery('sys_id', 'IN', filteredRecords);
-        filteredGr.query();
-        return filteredGr;
-    };
+	gForEach = function(func) {
+		if (!func) {
+			return;
+		}
 
-    gForEach = function (func) {
-        if (!func) {
-            return;
-        }
+		while (this.next()) {
+			func(this);
+		}
+	};
 
-        while (this.next()) {
-            func(this);
-        }
-    };
+	gReduce = function(func, value) {
+		while (this.next()) {
+			value = func(value, this);
+		}
+		return value;
+	};
 
-    gReduce = function (func, value) {
-        while (this.next()) {
-            value = func(value, this);
-        }
-        return value;
-    };
+	gSome = function(func) {
+		var bool = false;
 
-    gSome = function (func) {
-        var bool = false;
+		while (this.next() && !bool) {
+			bool = func(this);
+		}
+		return bool;
+	};
 
-        while (this.next() && !bool) {
-            bool = func(this);
-        }
-        return bool;
-    };
+	gFind = function(func) {
+		var bool = false;
 
-    gFind = function (func) {
-        var bool = false;
+		while (!bool && this.next()) {
+			bool = func(this);
+		}
 
-        while (this.next() && !bool) {
-            bool = func(this);
-        }
+		return bool ? this : undefined;
+	};
 
-        return bool ? this : undefined;
-    };
+	gToObject = function() {
+		var record = {};
+		Object.getOwnPropertyNames(this).forEach(function(prop) {
+			if (this._METHODS.indexOf(prop) === -1) {
+				record[prop] = this.getValue(prop);
+			}
+		}, this);
 
-    gToObject = function () {
-        var record = {};
-        Object.getOwnPropertyNames(this).forEach(function (prop) {
+		return record;
+	};
 
-            if (this._METHODS.indexOf(prop) === -1) {
-                record[prop] = this.getValue(prop);
-            }
-        }, this);
+	gJson = function() {
+		var record = this.gToObject();
+		return JSON.stringify(record);
+	};
 
-        return record;
-    };
+	gQuery = function() {
+		this._query();
+		return this;
+	};
 
-    gJson = function () {
-        var record = this.gToObject();
-        return JSON.stringify(record);
-    };
+	gGet = function(id) {
+		this.get(id);
+		return this;
+	};
 
-    gQuery = function () {
-        this._query();
-        return this;
-    };
+	gNext = function() {
+		this._next();
+		return this;
+	};
 
-    gGet = function (id) {
-        this.get(id);
-        return this;
-    };
+	generate = function(table) {
+		var extendedGr = new GlideRecord(table);
 
-    gNext = function () {
-        this._next();
-        return this;
-    };
+		this._METHODS.forEach(function(prop) {
+			extendedGr[prop] = this[prop];
+		}, this);
 
-    generate = function (table) {
-        var extendedGr = new GlideRecord(table);
+		return extendedGr;
+	};
 
-        this._METHODS.forEach(function (prop) {
-            extendedGr[prop] = this[prop];
-        }, this);
+	convert = function(glideRecord) {
+		this._METHODS.forEach(function(prop) {
+			glideRecord[prop] = this[prop];
+		}, this);
 
-        return extendedGr;
-    };
+		return glideRecord;
+	};
 
-    convert = function (glideRecord) {
+	if (typeof input === 'string') {
+		return this.generate(input);
+	}
 
-        this._METHODS.forEach(function (prop) {
-            glideRecord[prop] = this[prop];
-        }, this);
-
-        return glideRecord;
-    };
-
-    if (typeof input === 'string') {
-        return this.generate(input);
-    }
-
-    if (input instanceof GlideRecord) {
-        return this.convert(input);
-    }
+	if (input instanceof GlideRecord) {
+		return this.convert(input);
+	}
 };
